@@ -1,0 +1,29 @@
+version: '3.7'
+
+services:
+  mongodb_primary:
+    build: mongodb
+    image: mongodb-replset
+    container_name: mongodb_primary
+    hostname: mongodb_primary
+    entrypoint: [ "mongod", "--config", "/etc/mongod_primary.conf" ]
+    volumes:
+      - ./mongodb/script:/srv/mongodb/script # Initialize script
+      # - ./mongodb/etc/mongod-keyfile:/etc/mongod-keyfile:ro # 認証鍵作成後に有効化 Permission: 600
+      - ./mongodb/db:/data/db # DBデータをマウント
+      - ./mongodb/config/mongod_primary.conf:/etc/mongod_primary.conf # MongoDB設定
+    ports:
+      - 27017:27017
+    # extra_hosts:
+    #   - "mongodb_secondary:127.0.0.1" # 127.0.0.1部分をサーバのIPアドレスに書き換えてください
+    #   - "mongodb_arbiter:127.0.0.1" # 127.0.0.1部分をサーバのIPアドレスに書き換えてください
+    networks:
+      - container-link
+    restart: on-failure
+
+networks:
+  default:
+    external:
+      name: bridge
+  container-link:
+    name: container_network

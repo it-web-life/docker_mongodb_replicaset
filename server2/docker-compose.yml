@@ -1,0 +1,46 @@
+version: '3.7'
+
+services:
+  mongodb_secondary:
+    build: mongodb
+    image: mongodb-replset
+    container_name: mongodb_secondary
+    hostname: mongodb_secondary
+    entrypoint: [ "mongod", "--config", "/etc/mongod_secondary.conf" ]
+    volumes:
+      # - ./mongodb/etc/mongod-keyfile:/etc/mongod-keyfile:ro # 認証鍵作成後に有効化 Permission: 600
+      - ./mongodb/db:/data/db # DBデータをマウント
+      - ./mongodb/config/mongod_secondary.conf:/etc/mongod_secondary.conf # MongoDB設定
+    ports:
+      - 27018:27018
+    # extra_hosts:
+    #   - "mongodb_primary:127.0.0.1" # 127.0.0.1部分をサーバのIPアドレスに書き換えてください
+    networks:
+      - container-link
+    depends_on:
+      - mongodb_arbiter
+    restart: on-failure
+
+  mongodb_arbiter:
+    build: mongodb
+    image: mongodb-replset
+    container_name: mongodb_arbiter
+    hostname: mongodb_arbiter
+    entrypoint: [ "mongod", "--config", "/etc/mongod_arbiter.conf" ]
+    volumes:
+      # - ./mongodb/etc/mongod-keyfile:/etc/mongod-keyfile:ro # 認証鍵作成後に有効化 Permission: 600
+      - ./mongodb/config/mongod_arbiter.conf:/etc/mongod_arbiter.conf # MongoDB設定
+    ports:
+      - 27019:27019
+    # extra_hosts:
+    #   - "mongodb_primary:127.0.0.1" # 127.0.0.1部分をサーバのIPアドレスに書き換えてください
+    networks:
+      - container-link
+    restart: on-failure
+
+networks:
+  default:
+    external:
+      name: bridge
+  container-link:
+    name: container_network
